@@ -1,0 +1,21 @@
+{
+  "name": "Sky Dogfight",
+  "genre": "shooter",
+  "dim": "3D",
+  "mode": "Versus",
+  "players": "2–8",
+  "hook": "Biplanes, islands and a sky full of tracers.",
+  "how": "Everyone for themselves over a ring of little islands. Your plane flies toward the mouse and levels itself, so just chase someone, get them in your sight and hold fire. Get shot down and you are back in the air in seconds. First to 10 kills wins.",
+  "controls": "Mouse to steer, hold the button or Space to fire, Shift to boost (WASD works too). On a phone: drag to steer, guns fire when a plane is in the sight",
+  "uses": [
+    ["Leaderboard", "The most kills anyone has scored in one match."],
+    ["Host-run rounds", "One player's browser counts the kills, runs the clock and calls the winner; if it leaves, the next player takes over."],
+    ["Bots", "Bot pilots chase, lead their shots and break off until enough people join."],
+    ["Live sync", "Every plane, burst of fire and explosion shows up for everyone at once."]
+  ],
+  "ideas": [
+    "Add balloons to pop for bonus points",
+    "Make it a team battle, red planes against blue",
+    "Add a storm that closes in on the islands"
+  ]
+}
