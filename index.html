@@ -33,6 +33,7 @@
   .card ol { margin: 0; padding-left: 24px; font-size: 14px; text-align: left; }
   .card li span { float: right; font-variant-numeric: tabular-nums; }
   .card li.me { color: #ffd23f; font-weight: 700; }
+  .card li.note { list-style: none; margin-left: -24px; opacity: .8; } /* a status line, not a ranked entry */
   .card li i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
   .card p { margin: 10px 0 0; font-size: 13px; opacity: .85; }
   button.go { width: 100%; min-height: 48px; margin-top: 14px; border: 0; border-radius: 12px; background: #ff5d3a; color: #fff; font: 800 17px system-ui, sans-serif; cursor: pointer; }
@@ -62,7 +63,7 @@
 </div></div>
 <div class="screen" id="over" hidden><div class="card">
   <h2 id="winner"></h2><ol id="results"></ol>
-  <h3>Most kills in one match</h3><ol id="board"><li>Loading…</li></ol>
+  <h3>Most kills in one match</h3><ol id="board"><li class="note">Loading…</li></ol>
   <button class="go" id="again">Play again</button><p id="next"></p>
 </div></div>
 <script type="module">
@@ -341,7 +342,7 @@ function placeView(id, color, name, s, bot, dt, now) {
   if (!s.a && v.alive) explode(v.x, v.y, v.z, color);
   v.alive = !!s.a; v.f = !!s.f; v.low = !!s.l; v.speed = s.s;
   const ahead = bot && isHost() ? 0 : Math.min(0.35, (now - v.snapAt) / 1000), d = dirOf(s.h, s.t);
-  const k = 1 - Math.exp(-dt * 10);
+  const k = bot && isHost() ? 1 : 1 - Math.exp(-dt * 10); // the host draws its own bots exactly where they are, so their tracers leave their guns
   v.x += (s.x + d.x * s.s * ahead - v.x) * k; v.y += (s.y + d.y * s.s * ahead - v.y) * k; v.z += (s.z + d.z * s.s * ahead - v.z) * k;
   v.yaw += angleDiff(s.h, v.yaw) * k; v.pitch += (s.t - v.pitch) * k; v.roll += (s.r - v.roll) * k;
   v.m.g.visible = v.alive;
@@ -725,11 +726,11 @@ function drawOverlay(now) {
 }
 function showBoard(m) {
   const list = $("board"), mine = m.k[net.sessionId] || 0;
-  if (!board) { list.innerHTML = "<li>Leaderboards need a connection.</li>"; return; }
-  list.innerHTML = "<li>Loading…</li>";
+  if (!board) { list.innerHTML = "<li class=\"note\">Leaderboards need a connection.</li>"; return; }
+  list.innerHTML = "<li class=\"note\">Loading…</li>";
   (mine > 0 && me.submitted !== m.id ? board.submit(mine).catch(() => null) : Promise.resolve()).then(() => board.top(10)).then(({ entries }) => {
-    list.innerHTML = entries.length ? entries.map((e) => `<li>${esc(e.username || "Player")}<span>${e.score}</span></li>`).join("") : "<li>No kills yet. Score the first.</li>";
-  }).catch(() => { list.innerHTML = "<li>Couldn't load the leaderboard.</li>"; });
+    list.innerHTML = entries.length ? entries.map((e) => `<li>${esc(e.username || "Player")}<span>${e.score}</span></li>`).join("") : "<li class=\"note\">No kills yet. Score the first.</li>";
+  }).catch(() => { list.innerHTML = "<li class=\"note\">Couldn't load the leaderboard.</li>"; });
   me.submitted = m.id;
 }
 $("again").onclick = () => { const m = match(); if (m && m.phase === "over") { me.ready = m.id; net.me.set("rdy", m.id); } };
@@ -752,9 +753,10 @@ addEventListener("keydown", (e) => { const k = KEYS[e.code]; if (k) { e.preventD
 addEventListener("keyup", (e) => { const k = KEYS[e.code]; if (k) input[k] = k === "fire" || k === "boost" ? false : 0; });
 addEventListener("blur", () => Object.assign(input, { left: 0, right: 0, up: 0, down: 0, fire: false, boost: false }));
 $("play").onclick = () => { if (!me.joined) { me.joined = true; joinedAt = performance.now(); } unlockAudio(); };
-addEventListener("mousemove", (e) => { input.mx = e.clientX; input.my = e.clientY; input.mouse = true; });
+addEventListener("mousemove", (e) => { if (touchUI) return; input.mx = e.clientX; input.my = e.clientY; input.mouse = true; }); // phones: a tap also sends a mouse move; it must not steer
 document.addEventListener("mouseleave", () => { input.mx = innerWidth / 2; input.my = innerHeight / 2; });
 cv.addEventListener("mousedown", (e) => { if (e.button === 0) input.fire = true; });
+cv.addEventListener("contextmenu", (e) => e.preventDefault()); // right-click mid-fight: no browser menu
 addEventListener("mouseup", () => { input.fire = false; });
 // Touch: a floating stick anywhere on the left 60% of the screen steers; FIRE and BOOST on the right.
 const touch = { stick: null, ox: 0, oy: 0 };
